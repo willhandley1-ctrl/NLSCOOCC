@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLSCOCC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a18;
+    --paper: #f5f2ec;
+    --cream: #ede9e0;
+    --spice: #c84b1e;
+    --spice-light: #f0d5c8;
+    --gold: #b8860b;
+    --muted: #7a7670;
+    --border: #d4cfc5;
+    --white: #ffffff;
+    --success: #2d6a4f;
+    --radius: 4px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── NAV ── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    color: var(--paper);
+  }
+  .logo span { color: var(--spice); }
+  nav { display: flex; gap: 0; }
+  nav button {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 0.75rem;
+    height: 56px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  nav button.active { color: var(--paper); border-bottom-color: var(--spice); }
+  nav button:hover { color: var(--paper); }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 1.5rem 1.25rem 4rem; max-width: 640px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── UNLOCK SCREEN ── */
+  #lock-screen {
+    position: fixed; inset: 0;
+    background: var(--ink);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 999;
+    gap: 2rem;
+    padding: 2rem;
+  }
+  #lock-screen h1 {
+    font-family: var(--font-display);
+    color: var(--paper);
+    font-size: 2rem;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
+  #lock-screen h1 span { color: var(--spice); }
+  #lock-screen p { color: #888; font-size: 0.85rem; text-align: center; }
+  .pin-input {
+    display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 100%;
+  }
+  .pin-input input {
+    background: #2a2a28;
+    border: 1px solid #444;
+    border-radius: var(--radius);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    letter-spacing: 0.3em;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    width: 100%;
+    max-width: 240px;
+    outline: none;
+  }
+  .pin-input input:focus { border-color: var(--spice); }
+  .pin-error { color: var(--spice); font-size: 0.8rem; min-height: 1rem; }
+  .btn {
+    background: var(--spice);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.75rem;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn:hover { background: #b04018; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--ink);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.65rem 1.5rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-ghost:hover { background: var(--cream); }
+
+  /* ── LOADING ── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; color: var(--muted); font-size: 0.85rem;
+    padding: 3rem 0;
+  }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--spice);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SECTION HEADINGS ── */
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 0.25rem;
+  }
+  .page-subtitle { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1.75rem; }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 1.75rem 0 0.75rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+  }
+
+  /* ── UPCOMING EVENT ── */
+  .next-event-card {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-event-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle at top right, rgba(200,75,30,0.3), transparent 70%);
+  }
+  .next-event-card .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--spice);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  .next-event-card h2 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+  .next-event-card .meta { display: flex; flex-direction: column; gap: 0.3rem; }
+  .next-event-card .meta-row { font-size: 0.85rem; color: #ccc; display: flex; align-items: center; gap: 0.5rem; }
+  .next-event-card .meta-row strong { color: var(--paper); }
+  .countdown {
+    margin-top: 1rem;
+    display: inline-block;
+    background: rgba(200,75,30,0.25);
+    color: var(--spice-light);
+    border-radius: 3px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── EVENT LIST ── */
+  .event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    border-radius: var(--radius);
+  }
+  .event-row:hover { background: var(--cream); padding-left: 0.5rem; padding-right: 0.5rem; margin: 0 -0.5rem; }
+  .event-date-badge {
+    background: var(--cream);
+    border-radius: var(--radius);
+    padding: 0.4rem 0.6rem;
+    text-align: center;
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+  .event-date-badge .month { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--spice); }
+  .event-date-badge .year { font-size: 0.7rem; color: var(--muted); }
+  .event-info { flex: 1; }
+  .event-info h3 { font-size: 0.95rem; font-weight: 500; margin-bottom: 0.15rem; }
+  .event-info .event-meta { font-size: 0.78rem; color: var(--muted); }
+  .event-score {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--spice);
+    font-weight: 500;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  /* ── DETAIL PANEL ── */
+  #detail-panel {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--paper);
+    z-index: 200;
+    overflow-y: auto;
+  }
+  #detail-panel.open { display: block; }
+  .detail-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn {
+    background: none; border: none; color: var(--paper);
+    cursor: pointer; font-size: 1.2rem; padding: 0.25rem;
+    line-height: 1;
+  }
+  .detail-header h2 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 400; }
+  .detail-body { padding: 1.5rem 1.25rem 4rem; max-width: 640px; margin: 0 auto; }
+
+  .scores-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .score-card {
+    background: var(--cream);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+  }
+  .score-card .label { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.25rem; }
+  .score-card .value { font-family: var(--font-display); font-size: 1.5rem; color: var(--spice); }
+  .score-card .value span { font-size: 0.8rem; color: var(--muted); font-family: var(--font-body); }
+
+  .voters-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .voters-table th { text-align: left; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); }
+  .voters-table td { padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--border); }
+  .voters-table tr:last-child td { border-bottom: none; }
+  .voters-table td.num { text-align: center; font-weight: 500; }
+  .star-val { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 3px; font-size: 0.8rem; font-weight: 500; }
+  .s1 { background: #fce8e8; color: #b03030; }
+  .s2 { background: #fdf2e0; color: #8a5a00; }
+  .s3 { background: #e8f4ee; color: #2d6a4f; }
+  .s4 { background: #daf0e6; color: #1a5c3a; }
+  .s5 { background: #c6ebd6; color: #0f4a2a; }
+  .host-badge { background: var(--spice-light); color: var(--spice); font-size: 0.65rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 2px; margin-left: 0.4rem; }
+
+  /* ── LEADERBOARD ── */
+  .lb-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .lb-rank { font-family: var(--font-display); font-size: 1.1rem; color: var(--muted); min-width: 28px; }
+  .lb-rank.top { color: var(--gold); }
+  .lb-name { flex: 1; font-size: 0.95rem; font-weight: 400; }
+  .lb-stat { font-family: var(--font-display); font-size: 1.2rem; color: var(--spice); min-width: 40px; text-align: right; }
+  .lb-sub { font-size: 0.75rem; color: var(--muted); }
+  .tab-pills { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .pill {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+  .pill.active { background: var(--spice); border-color: var(--spice); color: white; }
+
+  /* ── SUBMIT SCORES ── */
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label { display: block; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  select, input[type="text"] {
+    width: 100%;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 0.65rem 0.85rem;
+    color: var(--ink);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237a7670' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
+  select:focus, input[type="text"]:focus { border-color: var(--spice); }
+  input[type="text"] { background-image: none; }
+
+  .star-rating { display: flex; gap: 0.5rem; }
+  .star-rating button {
+    width: 44px; height: 44px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .star-rating button.selected { background: var(--spice); border-color: var(--spice); color: white; }
+  .star-rating button:hover:not(.selected) { border-color: var(--spice); background: var(--spice-light); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  .success-msg {
+    background: #e8f5ee;
+    border: 1px solid #a8d5b8;
+    border-radius: var(--radius);
+    color: var(--success);
+    padding: 1rem;
+    font-size: 0.9rem;
+    display: none;
+    margin-bottom: 1rem;
+  }
+  .error-msg {
+    background: #fdecea;
+    border: 1px solid #f5b8b0;
+    border-radius: var(--radius);
+    color: #b03030;
+    padding: 1rem;
+    font-size: 0.9rem;
+    display: none;
+    margin-bottom: 1rem;
+  }
+  .is-host-notice {
+    background: var(--spice-light);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: #7a2a0a;
+    display: none;
+    margin-bottom: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <h1>New London Subcontinental Original Official Curry Club</h1>
+  <p>The New London Subcontinental Original Official Curry Club</p>
+  <div class="pin-input">
+    <input type="password" id="pin-field" placeholder="Enter passphrase" autocomplete="off">
+    <div class="pin-error" id="pin-error"></div>
+    <button class="btn" onclick="checkPin()">Enter</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<header>
+  <div class="logo">NL<span>SOOC</span>C</div>
+  <nav>
+    <button class="active" onclick="showPage('home', this)">Home</button>
+    <button onclick="showPage('events', this)">Events</button>
+    <button onclick="showPage('leaderboard', this)">Board</button>
+    <button onclick="showPage('submit', this)">Score</button>
+  </nav>
+</header>
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="page-title">Good evening.</div>
+  <div class="page-subtitle">The curry club awaits</div>
+
+  <div id="next-event-container">
+    <div class="loading"><div class="spinner"></div> Loading next event…</div>
+  </div>
+
+  <div class="section-label">Recent form</div>
+  <div id="recent-events-home">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- EVENTS -->
+<div id="page-events" class="page">
+  <div class="page-title">Events</div>
+  <div class="page-subtitle">All 47 nights of curry</div>
+  <div id="events-list">
+    <div class="loading"><div class="spinner"></div> Loading events…</div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="page-leaderboard" class="page">
+  <div class="page-title">Leaderboard</div>
+  <div class="page-subtitle">Who knows their curry</div>
+  <div class="tab-pills">
+    <div class="pill active" onclick="setLbTab('food', this)">Food scored</div>
+    <div class="pill" onclick="setLbTab('generous', this)">Most generous</div>
+    <div class="pill" onclick="setLbTab('hosted', this)">Times hosted</div>
+    <div class="pill" onclick="setLbTab('attended', this)">Attendance</div>
+  </div>
+  <div id="leaderboard-content">
+    <div class="loading"><div class="spinner"></div> Crunching numbers…</div>
+  </div>
+</div>
+
+<!-- SUBMIT SCORES -->
+<div id="page-submit" class="page">
+  <div class="page-title">Submit Scores</div>
+  <div class="page-subtitle">Rate the night</div>
+
+  <div class="success-msg" id="submit-success">✓ Scores submitted successfully!</div>
+  <div class="error-msg" id="submit-error"></div>
+
+  <div class="form-group">
+    <label>Event</label>
+    <select id="score-event">
+      <option value="">Loading events…</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Your name</label>
+    <select id="score-person">
+      <option value="">Loading members…</option>
+    </select>
+  </div>
+
+  <div class="is-host-notice" id="host-notice">
+    🍛 You're the host for this event — you won't score Hosting.
+  </div>
+
+  <hr class="divider">
+
+  <div class="form-group">
+    <label>Food <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;">(1–5)</span></label>
+    <div class="star-rating" id="rating-food"></div>
+  </div>
+
+  <div class="form-group">
+    <label>Ambience <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;">(1–5)</span></label>
+    <div class="star-rating" id="rating-ambience"></div>
+  </div>
+
+  <div class="form-group">
+    <label>Service <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;">(1–5)</span></label>
+    <div class="star-rating" id="rating-service"></div>
+  </div>
+
+  <div class="form-group" id="hosting-group">
+    <label>Hosting <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;">(1–5)</span></label>
+    <div class="star-rating" id="rating-hosting"></div>
+  </div>
+
+  <button class="btn" id="submit-btn" onclick="submitScores()" style="width:100%;margin-top:0.5rem;">Submit Scores</button>
+</div>
+
+<!-- EVENT DETAIL PANEL -->
+<div id="detail-panel">
+  <div class="detail-header">
+    <button class="back-btn" onclick="closeDetail()">←</button>
+    <h2 id="detail-title">Event</h2>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<script>
+// ── CONFIG ──
+const API_KEY = 'patCz1f4K6P3GAeNi.a69cbf3e4c39c27ceebbc27fa98c311c2ade46cba5931c7da0d2365a3cbc4414'; // Replace with your Airtable API key
+const BASE_ID = 'appOZZwQVtU3EPCXP';
+const PIN = 'ClearMandate'; // Change this passphrase
+
+// Table IDs
+const TABLES = {
+  people: 'tblvCdxwwBDgS85OY',
+  events: 'tblTd0RHUeczEUDSx',
+  scores: 'tblblyOnX40rPxVNK',
+  attendances: 'tblItoMqlVnEigyX5',
+  restaurants: 'tbl3mU5xpznOLDqnK',
+};
+
+// Field IDs
+const F = {
+  // People
+  p_name: 'fld62ispx5l7W6xdQ',
+  p_status: 'fldO1bI9FgmjgoQrv',
+  // Events
+  e_date: 'fldDjMzsqzhCVVaFp',
+  e_restaurant: 'fldvmJquu99Lc0g7E',
+  e_host: 'fldwxrmpb3vwVbAP6',
+  // Restaurants
+  r_name: 'fldaY2Vor0xue5Bez',
+  // Scores
+  s_person: 'fldAUspvLJXm301Md',
+  s_event: 'fld3iIxLrWlLPtBOW',
+  s_food: 'fldenNKXdT2I3M0eX',
+  s_ambience: 'fldUSLFanq0hsTlBJ',
+  s_service: 'fldW9ypaKNFEzCzwq',
+  s_hosting: 'fldZA69hdIq32DJZb',
+  s_ishost: 'fldBYm25bqDra7LVr',
+  // Attendances
+  a_person: 'fldZyBlkmLwTrlBkn',
+  a_event: 'fldNIPBaok1DqXrPe',
+  a_role: 'fldOASHmKm4160kfD',
+  a_didvote: 'fldgrpjDpBV6DRorl',
+};
+
+// ── STATE ──
+let allEvents = [];
+let allPeople = [];
+let allScores = [];
+let restaurantMap = {};
+let lbTab = 'food';
+let dataLoaded = false;
+
+// ── PIN ──
+function checkPin() {
+  const val = document.getElementById('pin-field').value.trim().toLowerCase();
+  if (val === PIN.toLowerCase()) {
+    document.getElementById('lock-screen').style.display = 'none';
+    if (!dataLoaded) loadAllData();
+  } else {
+    document.getElementById('pin-error').textContent = 'Incorrect passphrase.';
+    document.getElementById('pin-field').value = '';
+  }
+}
+document.getElementById('pin-field').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+// ── API ──
+async function airtable(table, params = {}) {
+  const url = new URL(`https://api.airtable.com/v0/${BASE_ID}/${table}`);
+  Object.entries(params).forEach(([k, v]) => {
+    if (Array.isArray(v)) v.forEach(i => url.searchParams.append(k, i));
+    else url.searchParams.set(k, v);
+  });
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${API_KEY}` } });
+  if (!res.ok) throw new Error(`Airtable error ${res.status}`);
+  return res.json();
+}
+
+async function airtablePost(table, body) {
+  const res = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${table}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || `Error ${res.status}`);
+  }
+  return res.json();
+}
+
+async function fetchAll(table, params = {}) {
+  let records = [], offset;
+  do {
+    const p = { ...params, pageSize: 100 };
+    if (offset) p.offset = offset;
+    const data = await airtable(table, p);
+    records.push(...data.records);
+    offset = data.offset;
+  } while (offset);
+  return records;
+}
+
+// ── LOAD DATA ──
+async function loadAllData() {
+  dataLoaded = true;
+  try {
+    // Load restaurants first
+    const restRecs = await fetchAll(TABLES.restaurants);
+    restRecs.forEach(r => { restaurantMap[r.id] = r.fields[F.r_name] || '—'; });
+
+    // Load people & events in parallel
+    const [peopleRecs, eventRecs, scoreRecs] = await Promise.all([
+      fetchAll(TABLES.people),
+      fetchAll(TABLES.events),
+      fetchAll(TABLES.scores),
+    ]);
+
+    allPeople = peopleRecs
+      .filter(r => ['Active Member','Inactive Member','Guest'].includes(r.fields[F.p_status]))
+      .map(r => ({ id: r.id, name: r.fields[F.p_name], status: r.fields[F.p_status] }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const today = new Date();
+    allEvents = eventRecs
+      .filter(r => r.fields[F.e_date])
+      .map(r => {
+        const hostIds = r.fields[F.e_host] || [];
+        const restIds = r.fields[F.e_restaurant] || [];
+        return {
+          id: r.id,
+          date: r.fields[F.e_date],
+          restaurant: restIds.length ? (restaurantMap[restIds[0]] || restIds[0]) : '—',
+          hostId: hostIds[0] || null,
+        };
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    allScores = scoreRecs.map(r => ({
+      id: r.id,
+      personId: (r.fields[F.s_person] || [])[0],
+      eventId: (r.fields[F.s_event] || [])[0],
+      food: r.fields[F.s_food] || null,
+      ambience: r.fields[F.s_ambience] || null,
+      service: r.fields[F.s_service] || null,
+      hosting: r.fields[F.s_hosting] || null,
+      isHost: r.fields[F.s_ishost] || false,
+    }));
+
+    renderHome();
+    renderEvents();
+    renderLeaderboard();
+    populateSubmitForm();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('next-event-container').innerHTML =
+      `<div style="color:var(--spice);font-size:0.85rem;padding:1rem 0;">Could not load data. Check API key.</div>`;
+  }
+}
+
+// ── HELPERS ──
+function formatDate(str) {
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function formatMonthYear(str) {
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+}
+function getMonth(str) {
+  return new Date(str + 'T12:00:00').toLocaleDateString('en-GB', { month: 'short' });
+}
+function getYear(str) {
+  return new Date(str + 'T12:00:00').getFullYear();
+}
+function personName(id) {
+  const p = allPeople.find(p => p.id === id);
+  return p ? p.name : '—';
+}
+function avg(arr) {
+  const v = arr.filter(x => x != null);
+  return v.length ? (v.reduce((a, b) => a + b, 0) / v.length) : null;
+}
+function fmtAvg(n) { return n != null ? n.toFixed(2) : '—'; }
+function starClass(n) { return n ? `s${n}` : ''; }
+
+function eventScores(eventId) {
+  return allScores.filter(s => s.eventId === eventId);
+}
+function eventAvgFood(eventId) {
+  return avg(eventScores(eventId).map(s => s.food));
+}
+
+// ── HOME ──
+function renderHome() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const upcoming = allEvents.filter(e => new Date(e.date + 'T12:00:00') >= today);
+  const past = allEvents.filter(e => new Date(e.date + 'T12:00:00') < today).slice(-5).reverse();
+
+  // Next event
+  const container = document.getElementById('next-event-container');
+  if (upcoming.length) {
+    const next = upcoming[0];
+    const d = new Date(next.date + 'T12:00:00');
+    const diff = Math.round((d - today) / 86400000);
+    const countdown = diff === 0 ? 'Tonight!' : diff === 1 ? 'Tomorrow' : `In ${diff} days`;
+    container.innerHTML = `
+      <div class="next-event-card">
+        <div class="eyebrow">Next event</div>
+        <h2>${next.restaurant}</h2>
+        <div class="meta">
+          <div class="meta-row">📅 <strong>${formatDate(next.date)}</strong></div>
+          <div class="meta-row">👤 Hosted by <strong>${personName(next.hostId)}</strong></div>
+        </div>
+        <div class="countdown">${countdown}</div>
+      </div>`;
+  } else {
+    container.innerHTML = `<div style="color:var(--muted);padding:1rem 0;font-size:0.9rem;">No upcoming events scheduled.</div>`;
+  }
+
+  // Recent events
+  const recentEl = document.getElementById('recent-events-home');
+  recentEl.innerHTML = past.map(e => eventRowHTML(e)).join('');
+}
+
+function eventRowHTML(e) {
+  const food = eventAvgFood(e.id);
+  const scores = eventScores(e.id);
+  return `<div class="event-row" onclick="openDetail('${e.id}')">
+    <div class="event-date-badge">
+      <div class="month">${getMonth(e.date)}</div>
+      <div class="year">${getYear(e.date)}</div>
+    </div>
+    <div class="event-info">
+      <h3>${e.restaurant}</h3>
+      <div class="event-meta">Hosted by ${personName(e.hostId)} · ${scores.length} votes</div>
+    </div>
+    ${food != null ? `<div class="event-score">${food.toFixed(1)}</div>` : ''}
+  </div>`;
+}
+
+// ── EVENTS PAGE ──
+function renderEvents() {
+  const list = document.getElementById('events-list');
+  const sorted = [...allEvents].reverse();
+  list.innerHTML = sorted.map(e => eventRowHTML(e)).join('');
+}
+
+// ── DETAIL PANEL ──
+function openDetail(eventId) {
+  const e = allEvents.find(e => e.id === eventId);
+  if (!e) return;
+  const scores = eventScores(eventId);
+  const hostId = e.hostId;
+
+  const avgFood = avg(scores.map(s => s.food));
+  const avgAmb = avg(scores.map(s => s.ambience));
+  const avgSvc = avg(scores.map(s => s.service));
+  const avgHost = avg(scores.filter(s => !s.isHost).map(s => s.hosting));
+
+  document.getElementById('detail-title').textContent = e.restaurant;
+
+  let html = `
+    <div style="color:var(--muted);font-size:0.82rem;margin-bottom:0.25rem;">${formatDate(e.date)}</div>
+    <div style="font-size:0.9rem;margin-bottom:1.25rem;">Hosted by <strong>${personName(hostId)}</strong></div>`;
+
+  if (scores.length) {
+    html += `<div class="scores-grid">
+      <div class="score-card"><div class="label">Food</div><div class="value">${fmtAvg(avgFood)}<span>/5</span></div></div>
+      <div class="score-card"><div class="label">Ambience</div><div class="value">${fmtAvg(avgAmb)}<span>/5</span></div></div>
+      <div class="score-card"><div class="label">Service</div><div class="value">${fmtAvg(avgSvc)}<span>/5</span></div></div>
+      <div class="score-card"><div class="label">Hosting</div><div class="value">${fmtAvg(avgHost)}<span>/5</span></div></div>
+    </div>`;
+
+    html += `<div class="section-label">Individual scores</div>
+    <table class="voters-table">
+      <thead><tr><th>Name</th><th>Food</th><th>Amb</th><th>Svc</th><th>Host</th></tr></thead>
+      <tbody>`;
+
+    scores.forEach(s => {
+      const name = personName(s.personId);
+      const isH = s.personId === hostId;
+      html += `<tr>
+        <td>${name}${isH ? '<span class="host-badge">host</span>' : ''}</td>
+        <td class="num"><span class="star-val ${starClass(s.food)}">${s.food ?? '—'}</span></td>
+        <td class="num"><span class="star-val ${starClass(s.ambience)}">${s.ambience ?? '—'}</span></td>
+        <td class="num"><span class="star-val ${starClass(s.service)}">${s.service ?? '—'}</span></td>
+        <td class="num">${isH ? '<span style="color:var(--muted);font-size:0.75rem;">—</span>' : `<span class="star-val ${starClass(s.hosting)}">${s.hosting ?? '—'}</span>`}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>`;
+  } else {
+    html += `<div style="color:var(--muted);font-size:0.9rem;padding:1rem 0;">No scores recorded for this event.</div>`;
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail-panel').scrollTop = 0;
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ── LEADERBOARD ──
+function setLbTab(tab, el) {
+  lbTab = tab;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const el = document.getElementById('leaderboard-content');
+  if (!allPeople.length) return;
+
+  const members = allPeople.filter(p => p.status === 'Active Member' || p.status === 'Inactive Member');
+  let rows = [];
+
+  if (lbTab === 'food') {
+    rows = members.map(p => {
+      const pScores = allScores.filter(s => s.personId === p.id && !s.isHost);
+      const foods = pScores.map(s => s.food).filter(x => x != null);
+      return { name: p.name, val: avg(foods), sub: `${foods.length} votes`, n: foods.length };
+    }).filter(r => r.n >= 3).sort((a, b) => b.val - a.val);
+
+    el.innerHTML = rows.map((r, i) => `
+      <div class="lb-row">
+        <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+        <div><div class="lb-name">${r.name}</div><div class="lb-sub">${r.sub}</div></div>
+        <div class="lb-stat">${r.val.toFixed(2)}</div>
+      </div>`).join('');
+
+  } else if (lbTab === 'generous') {
+    rows = members.map(p => {
+      const given = allScores.filter(s => s.personId === p.id && !s.isHost).map(s => s.hosting).filter(x => x != null);
+      return { name: p.name, val: avg(given), sub: `avg hosting score given`, n: given.length };
+    }).filter(r => r.n >= 3).sort((a, b) => b.val - a.val);
+
+    el.innerHTML = rows.map((r, i) => `
+      <div class="lb-row">
+        <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+        <div><div class="lb-name">${r.name}</div><div class="lb-sub">${r.sub}</div></div>
+        <div class="lb-stat">${r.val.toFixed(2)}</div>
+      </div>`).join('');
+
+  } else if (lbTab === 'hosted') {
+    const hostCount = {};
+    allEvents.forEach(e => { if (e.hostId) hostCount[e.hostId] = (hostCount[e.hostId] || 0) + 1; });
+    rows = members.map(p => ({
+      name: p.name, val: hostCount[p.id] || 0, sub: 'events hosted',
+    })).sort((a, b) => b.val - a.val);
+
+    el.innerHTML = rows.map((r, i) => `
+      <div class="lb-row">
+        <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+        <div><div class="lb-name">${r.name}</div><div class="lb-sub">${r.sub}</div></div>
+        <div class="lb-stat">${r.val}</div>
+      </div>`).join('');
+
+  } else if (lbTab === 'attended') {
+    const attCount = {};
+    allScores.forEach(s => { if (s.personId) attCount[s.personId] = (attCount[s.personId] || 0) + 1; });
+    rows = members.map(p => ({
+      name: p.name, val: attCount[p.id] || 0, sub: `of ${allEvents.length} events`,
+    })).sort((a, b) => b.val - a.val);
+
+    el.innerHTML = rows.map((r, i) => `
+      <div class="lb-row">
+        <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+        <div><div class="lb-name">${r.name}</div><div class="lb-sub">${r.sub}</div></div>
+        <div class="lb-stat">${r.val}</div>
+      </div>`).join('');
+  }
+}
+
+// ── SUBMIT FORM ──
+function buildStarRating(containerId, name) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = i;
+    btn.dataset.val = i;
+    btn.onclick = () => {
+      el.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    el.appendChild(btn);
+  }
+}
+
+function populateSubmitForm() {
+  // Events — only past events, most recent first
+  const today = new Date(); today.setHours(0,0,0,0);
+  const pastEvents = allEvents
+    .filter(e => new Date(e.date + 'T12:00:00') <= today)
+    .reverse();
+
+  const eventSel = document.getElementById('score-event');
+  eventSel.innerHTML = '<option value="">Select event…</option>' +
+    pastEvents.map(e => `<option value="${e.id}" data-host="${e.hostId}">${formatDate(e.date)} — ${e.restaurant}</option>`).join('');
+
+  // People — active members only
+  const personSel = document.getElementById('score-person');
+  const active = allPeople.filter(p => p.status === 'Active Member' || p.status === 'Guest');
+  personSel.innerHTML = '<option value="">Select your name…</option>' +
+    active.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  // Build star ratings
+  buildStarRating('rating-food', 'food');
+  buildStarRating('rating-ambience', 'ambience');
+  buildStarRating('rating-service', 'service');
+  buildStarRating('rating-hosting', 'hosting');
+
+  // Show/hide hosting based on whether person is host
+  function checkHost() {
+    const sel = document.getElementById('score-event');
+    const opt = sel.options[sel.selectedIndex];
+    const hostId = opt ? opt.dataset.host : null;
+    const personId = document.getElementById('score-person').value;
+    const isHost = hostId && personId && hostId === personId;
+    document.getElementById('hosting-group').style.display = isHost ? 'none' : 'block';
+    document.getElementById('host-notice').style.display = isHost ? 'block' : 'none';
+  }
+
+  document.getElementById('score-event').addEventListener('change', checkHost);
+  document.getElementById('score-person').addEventListener('change', checkHost);
+}
+
+function getRating(containerId) {
+  const sel = document.querySelector(`#${containerId} button.selected`);
+  return sel ? parseInt(sel.dataset.val) : null;
+}
+
+async function submitScores() {
+  const eventId = document.getElementById('score-event').value;
+  const personId = document.getElementById('score-person').value;
+  const food = getRating('rating-food');
+  const ambience = getRating('rating-ambience');
+  const service = getRating('rating-service');
+
+  const errEl = document.getElementById('submit-error');
+  const okEl = document.getElementById('submit-success');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (!eventId) { errEl.textContent = 'Please select an event.'; errEl.style.display = 'block'; return; }
+  if (!personId) { errEl.textContent = 'Please select your name.'; errEl.style.display = 'block'; return; }
+  if (!food || !ambience || !service) { errEl.textContent = 'Please rate Food, Ambience and Service.'; errEl.style.display = 'block'; return; }
+
+  // Is this person the host?
+  const event = allEvents.find(e => e.id === eventId);
+  const isHost = event && event.hostId === personId;
+  const hosting = isHost ? null : getRating('rating-hosting');
+  if (!isHost && !hosting) { errEl.textContent = 'Please rate Hosting.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const fields = {
+      [F.s_person]: [personId],
+      [F.s_event]: [eventId],
+      [F.s_food]: food,
+      [F.s_ambience]: ambience,
+      [F.s_service]: service,
+      [F.s_ishost]: isHost,
+    };
+    if (hosting != null) fields[F.s_hosting] = hosting;
+
+    await airtablePost(TABLES.scores, { records: [{ fields }] });
+
+    okEl.style.display = 'block';
+    // Reset form
+    document.getElementById('score-event').value = '';
+    document.getElementById('score-person').value = '';
+    ['rating-food','rating-ambience','rating-service','rating-hosting'].forEach(id => {
+      document.querySelectorAll(`#${id} button`).forEach(b => b.classList.remove('selected'));
+    });
+    document.getElementById('hosting-group').style.display = 'block';
+    document.getElementById('host-notice').style.display = 'none';
+
+    // Reload scores silently
+    const scoreRecs = await fetchAll(TABLES.scores);
+    allScores = scoreRecs.map(r => ({
+      id: r.id,
+      personId: (r.fields[F.s_person] || [])[0],
+      eventId: (r.fields[F.s_event] || [])[0],
+      food: r.fields[F.s_food] || null,
+      ambience: r.fields[F.s_ambience] || null,
+      service: r.fields[F.s_service] || null,
+      hosting: r.fields[F.s_hosting] || null,
+      isHost: r.fields[F.s_ishost] || false,
+    }));
+    renderLeaderboard();
+
+  } catch (e) {
+    errEl.textContent = 'Submission failed: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit Scores';
+  }
+}
+
+// ── NAV ──
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

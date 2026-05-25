@@ -783,8 +783,12 @@ function eventRowHTML(e) {
 // ── EVENTS PAGE ──
 function renderEvents() {
   const list = document.getElementById('events-list');
-  const sorted = [...allEvents].reverse();
-  list.innerHTML = sorted.map(e => eventRowHTML(e)).join('');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const past = allEvents.filter(e => new Date(e.date + 'T12:00:00') < today);
+  const upcoming = allEvents.filter(e => new Date(e.date + 'T12:00:00') >= today);
+  const next = upcoming.length ? [upcoming[0]] : [];
+  const toShow = [...past, ...next].reverse();
+  list.innerHTML = toShow.map(e => eventRowHTML(e)).join('');
 }
 
 // ── DETAIL PANEL ──
@@ -936,8 +940,10 @@ function buildStarRating(containerId, name) {
 function populateSubmitForm() {
   // Events — only past events, most recent first
   const today = new Date(); today.setHours(0,0,0,0);
-  // Show all events in the submit dropdown, most recent first
-  const pastEvents = [...allEvents].reverse();
+  const allUpcoming = allEvents.filter(e => new Date(e.date + 'T12:00:00') >= today);
+  const allPast = allEvents.filter(e => new Date(e.date + 'T12:00:00') < today);
+  const nextOne = allUpcoming.length ? [allUpcoming[0]] : [];
+  const pastEvents = [...allPast, ...nextOne].reverse();
 
   const eventSel = document.getElementById('score-event');
   eventSel.innerHTML = '<option value="">Select event…</option>' +
